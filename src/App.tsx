@@ -7,6 +7,7 @@ import './App.css';
 
 function App() {
   const [message, setMessage] = useState('');
+  const [isTyping, setIsTyping] = useState('');
   const [history, setHistory] = useState<Array<string>>([]);
   const [client, setClient] = useState(sdk.createClient({
     baseUrl: "https://matrix.org",
@@ -29,14 +30,16 @@ function App() {
     });
 
     client.on("event", function(event:any){
-      //console.log(event.getType());
-      //console.log(event);
+      const eventType = event.getType();
+
+      if (eventType === 'm.typing') {
+        const username = event.event.content.user_ids;
+        setIsTyping(username ? `${username} is typing ...` : '');
+      }
     })
 
     client.on("Room.timeline", function(event:any, room:any, toStartOfTimeline:any) {
       const currentMessage = event.event.content.body;
-      //console.log('currentMessage', currentMessage);
-      console.log('history', history);
       setHistory([...history, currentMessage]);
     });
 
@@ -81,6 +84,9 @@ function App() {
         <p>
           <textarea onChange={handleOnSendMessage} value={message} />
           <button onClick={(e) => handleOnClick(e)}>Send</button>
+        </p>
+        <p>
+          <span>{`${isTyping}`}</span>
         </p>
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
